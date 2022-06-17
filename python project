@@ -1,0 +1,203 @@
+def empty_board():
+    board = []                                          #lista dwuwymiarowa składająca z 6 wierszy i 7 kolumn
+    for i in range(0,6):
+        board.append([' '] * 7)
+    return board
+def empty_columns():
+    columns = []
+    for i in range(0,7):
+        columns.append([])
+    return columns
+
+def basic_board(board):
+    row = ['f | ','e | ','d | ','c | ','b | ','a | ',6]   #czy ta 6 jest potrzebna? tak, inaczej jest out of range
+    numbers = '    1   2   3   4   5   6   7   '
+    print('')                   #jest przerwa między tekstem, a tablicą, ładniej wizualnie
+    print('  ' + '-'*(len(numbers)-3))          #musi być -3 inaczej jest za długie
+    for j in range(0,6):
+        for i in range(0,7):                                #8 po to aby było printowanie na prawo
+            row[j] = row[j] + str(board[j][i]) + ' | '    #f | potem miejsce na litere, potem kreska
+        print(row[j])
+        print('  ' + '-'*((len(row[j])-3)))
+    print(numbers)
+    print('')
+
+def move(color, round, name1, i, name2):
+    Set0 = {'1','2','3','4','5','6','7'}
+    action = input(f"What's your move {name1}?: ")
+    if action == "b":
+        if color == "R":
+            basic_board(round[i-1][0])
+            round[i][0], round[i][1] = move("G", round, name2, i-1, name1)
+            basic_board(round[i][0])
+            return move("R", round, name1, i, name2)
+        else:
+            basic_board(round[i-1][0])
+            round[i][0], round[i][1] = move("R", round, name2, i - 1, name1)
+            basic_board(round[i][0])
+            return move("G", round, name1, i, name2)
+    elif action not in Set0:
+        print('Use a number between 1 and 7 or "b" to redo a move, biatch')
+        move(color, round, name1, i, name2)
+    else:
+        action = int(action)
+        if len(round[i][1][action-1]) < 6:                  #7 kolumna ma numer 6
+            round[i][1][action-1].append(color)             #wrzucamy nasz kolorowy pionek
+            round[i][0][6-len(round[i][1][action-1])][action-1] = round[i][1][action-1][-1]  #6- ilość wypełnionych wierszy w kolumnie
+            #pakujemy własnie dodany pionek do tablicy, którą wyświtlamy użytkownikowi.
+        else:
+            print('This column is already full. Try again. You blind fuck:)')
+            move(color, round, name1, i, name2)
+    return [round[i][0],round[i][1]]
+
+# Check wins
+def if_win(color,board):
+    win = False
+    # Horizontal checker
+    for j in range(0,6):
+        for i in range(0,4):                    #możemy pozwolić sobie na spawdzenie do 4, żeby nie wykonować dodatkowych czynności poza zakres
+            if (board[j][i]==board[j][i+1]==board[j][i+2]==board[j][i+3]==color):
+                    win = True
+    # Vertical checker
+    for i in range(0,7):
+        for j in range(0,3):
+            if (board[j][i]==board[j+1][i]==board[j+2][i]==board[j+3][i]==color):
+                    win = True
+    # Diagonal checker
+    for i in range(0,4):        #kolumny, 1-7
+        for j in range(0,3):    #wiersze, a-f
+            if (board[j][i]==board[j+1][i+1]==board[j+2][i+2]==board[j+3][i+3]==color or # w prawo do góry, zaczyna od lewego dolnego rogu
+                board[j+3][i]==board[j+2][i+1]==board[j+1][i+2]==board[j][i+3]==color): #w prawo do dołu, zaczyna od 1:d
+                win = True
+    return win
+
+def winner_score(name1, leaderboard2):
+    for i in range(len(leaderboard2)):
+        if name1 == leaderboard2[i][0]:
+            leaderboard2[i][1] = str(int(leaderboard2[i][1]) + 1)
+            return(leaderboard2)
+    leaderboard2.append([name1,'1','0'])
+    return(leaderboard2)
+
+def loser_score(name2,leaderboard2):
+    for i in range(len(leaderboard2)):
+        if name2 == leaderboard2[i][0]:
+            leaderboard2[i][2] = str(int(leaderboard2[i][2]) + 1)
+            return(leaderboard2)
+    leaderboard2.append([name2,'0','1'])
+    return(leaderboard2)
+
+
+# Main program
+def main():
+    # Prompt player input
+    name1 = input('Player RED type your name: ')
+    name2 = input('Player GREEN type your name: ')
+
+    print('To start, enter 1 to 7, meaning the row in which you want to put your piece in.')
+    print('You can redo one move by typing "b" instead of a number.')
+    print('Be the first to get four of your pieces in a row horizontally, vertically or diagonally!')
+    # Print board
+    board = empty_board()
+    columns = empty_columns()
+    basic_board(board)
+    number_of_moves = 0
+
+    # Creating space for leaderboard
+    file = open('Leaderboard.txt', 'a')
+    file.close()
+    f = open('Leaderboard.txt', 'r')
+    leaderboard = []
+    for line in f.readlines():
+        leaderboard.append(line.replace('\n', ''))
+    f.close()
+    leaderboard2 = []
+    for i in range(len(leaderboard)):
+        leaderboard2.append(leaderboard[i].split())
+    win = False
+    # tempb1=board
+    # tempb2=board
+    # tempc1=columns
+    # tempc2=columns
+    # while win == False:
+    #     # Red player
+    #     board, columns = move('R', board, columns, name1, tempb1, tempc1, name2)
+    #     basic_board(board)
+    #     win = if_win('R',board)
+    #     if win == True:
+    #         print(f'{name1} wins!!!')
+    #         leaderboard2 = winner_score(name1, leaderboard2)
+    #         leaderboard2 = loser_score(name2, leaderboard2)
+    #         break
+    #
+    #     tempb1 = tempb2
+    #     tempb2 = board
+    #     tempc1 = tempc2
+    #     tempc2 = columns
+    #
+    #
+    #     # Green player
+    #     board, columns = move('G', board, columns, name2, tempb1, tempc1, name1)
+    #     basic_board(board)
+    #     win = if_win('G', board)
+    #     if win == True:
+    #         print(f'{name2} wins!!!')
+    #         leaderboard2 = winner_score(name2, leaderboard2)
+    #         leaderboard2 = loser_score(name1, leaderboard2)
+    #         break
+    #     print(board)
+    #     tempb1 = tempb2
+    #     tempb2 = board
+    #     tempc1 = tempc2
+    #     tempc2 = columns
+    #
+    #     number_of_moves += 1
+    #     if number_of_moves == 21:
+    #         print("It's a tie!")
+    #         break
+
+    round = []
+    for i in range(42):
+        round.append([])
+    round[0]=[board,columns]
+    i=0
+    while win == False:
+        # Red player
+        round[i+1] = move('R', round, name1, i, name2)
+        basic_board(round[i+1][0])
+        win = if_win('R', round[i+1][0])
+        if win == True:
+            print(f'{name1} wins!!!')
+            leaderboard2 = winner_score(name1, leaderboard2)
+            leaderboard2 = loser_score(name2, leaderboard2)
+            break
+
+        i+=1
+
+
+
+        # Green player
+        round[i+1] = move('G', round,  name2, i, name1)
+        basic_board(round[i+1][0])
+        win = if_win('G', round[i+1][0])
+        if win == True:
+            print(f'{name2} wins!!!')
+            leaderboard2 = winner_score(name2, leaderboard2)
+            leaderboard2 = loser_score(name1, leaderboard2)
+            break
+
+        print(round)
+        i+=1
+
+        number_of_moves += 1
+        if number_of_moves == 21:
+            print("It's a tie!")
+            break
+
+    file = open("leaderboard.txt", "w")
+    for i in range(len(leaderboard2)):
+        x = " ".join(leaderboard2[i])
+        file.write(x + "\n")
+    file.close()
+
+main()
